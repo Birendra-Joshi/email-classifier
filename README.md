@@ -2,7 +2,7 @@
 
 Hey there! This is a project I built to detect whether an incoming message or email is Spam or Ham (Not Spam). 
 
-I wanted to dive deeper into Natural Language Processing (NLP) and text classification, so I built this pipeline using Python, Scikit-learn, and Streamlit. The app takes raw text input, runs it through a machine learning model, and spits out a prediction in real-time to let you know if a message looks sketchy or completely safe.
+I wanted to dive deeper into Natural Language Processing (NLP) and text classification, so I built this pipeline using Python, Scikit-learn, and Streamlit. The app takes raw text input, runs it through a machine learning model, and spits out a prediction in real-time to let you know if a message looks sketchy or completely safe..
 
 ---
 
