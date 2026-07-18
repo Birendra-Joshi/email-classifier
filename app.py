@@ -54,22 +54,20 @@ def waveform_svg(confidence: float, color: str, seed: int = 7):
         y = mid + edge_damp * amplitude * math.sin(i * 0.9 + seed) * math.sin(i * 0.17)
         points.append(f"{x:.1f},{y:.1f}")
     path = " ".join(points)
-    return f"""
-    <svg viewBox="0 0 {width} {height}" width="100%" height="{height}" preserveAspectRatio="none">
-        <polyline points="{path}" fill="none" stroke="{color}" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-        <line x1="0" y1="{mid}" x2="{width}" y2="{mid}" stroke="{color}" stroke-width="0.5" opacity="0.15"/>
-    </svg>
-    """
+    svg = (
+        f'<svg viewBox="0 0 {width} {height}" width="100%" height="{height}" preserveAspectRatio="none">'
+        f'<polyline points="{path}" fill="none" stroke="{color}" stroke-width="2" '
+        f'stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>'
+        f'<line x1="0" y1="{mid}" x2="{width}" y2="{mid}" stroke="{color}" stroke-width="0.5" opacity="0.15"/>'
+        f'</svg>'
+    )
+    return svg
 
 
 # ------------------------------------------------------------------------------
 # Style system
 # ------------------------------------------------------------------------------
-st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-
+CSS_RAW = """
 :root {
     --bg: #0a0e0c;
     --panel: #101613;
@@ -80,23 +78,17 @@ st.markdown("""
     --green: #4ade80;
     --red: #f87171;
 }
-
 html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 code, .mono, .app-title, .cmd-line, .stButton>button, textarea,
 .sidebar-row, .example-tag, .banner-title, .banner-conf, .footer-cmd {
     font-family: 'JetBrains Mono', monospace !important;
 }
-
 .stApp {
     background-color: var(--bg);
-    background-image:
-        repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    background-image: repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
     color: var(--text);
 }
-
 .block-container { padding-top: 2.2rem; max-width: 700px; }
-
-/* Header */
 .app-title {
     font-size: 2rem;
     font-weight: 700;
@@ -112,13 +104,11 @@ code, .mono, .app-title, .cmd-line, .stButton>button, textarea,
     margin-bottom: 1.8rem;
 }
 .cmd-line::after {
-    content: "▊";
+    content: "\\25CA";
     animation: blink 1.1s steps(1) infinite;
     margin-left: 2px;
 }
 @keyframes blink { 50% { opacity: 0; } }
-
-/* Section eyebrows */
 .eyebrow {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.72rem;
@@ -128,8 +118,6 @@ code, .mono, .app-title, .cmd-line, .stButton>button, textarea,
     text-transform: uppercase;
 }
 .eyebrow::before { content: "// "; color: var(--border); }
-
-/* Sample transmission tags */
 .stButton > button {
     background-color: var(--panel);
     color: var(--text);
@@ -138,14 +126,13 @@ code, .mono, .app-title, .cmd-line, .stButton>button, textarea,
     font-size: 0.78rem;
     padding: 8px 10px;
     transition: all 0.15s ease;
+    width: 100%;
 }
 .stButton > button:hover {
     border-color: var(--green);
     color: var(--green);
     background-color: rgba(74, 222, 128, 0.06);
 }
-
-/* Text area = terminal input */
 textarea {
     background-color: var(--panel) !important;
     color: var(--green) !important;
@@ -157,9 +144,6 @@ textarea:focus {
     border-color: var(--green) !important;
     box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.3) !important;
 }
-
-/* Scan button — primary action, distinct from sample tags */
-div[data-testid="stButton"]:has(button[kind="primary"]) button,
 button[kind="primary"] {
     background-color: rgba(74, 222, 128, 0.08) !important;
     border: 1px solid var(--green) !important;
@@ -171,8 +155,6 @@ button[kind="primary"]:hover {
     background-color: rgba(74, 222, 128, 0.18) !important;
     box-shadow: 0 0 20px rgba(74, 222, 128, 0.25) !important;
 }
-
-/* Result panel */
 .report-card {
     background-color: var(--panel);
     border: 1px solid var(--border);
@@ -206,8 +188,6 @@ button[kind="primary"]:hover {
     animation: pulse 1.6s ease-in-out infinite;
 }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background-color: #0c1210;
     border-right: 1px solid var(--border);
@@ -229,8 +209,6 @@ section[data-testid="stSidebar"] {
 }
 .sidebar-row .k { color: var(--dim); }
 .sidebar-row .v { color: var(--text); }
-
-/* Footer */
 .footer {
     margin-top: 46px;
     padding-top: 18px;
@@ -245,12 +223,21 @@ section[data-testid="stSidebar"] {
     margin: 0 8px;
 }
 .footer-cmd a:hover { color: var(--green); }
-
 @media (max-width: 480px) {
     .app-title { font-size: 1.5rem; }
 }
-</style>
-""", unsafe_allow_html=True)
+"""
+
+# Streamlit's markdown parser can treat blank lines inside a raw <style> block as
+# paragraph breaks, which splits the tag apart and leaks CSS as visible text.
+# Collapsing to a single unbroken block avoids that entirely.
+_css_inline = " ".join(line.strip() for line in CSS_RAW.splitlines() if line.strip())
+
+st.markdown(
+    '<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">'
+    f'<style>{_css_inline}</style>',
+    unsafe_allow_html=True,
+)
 
 # ------------------------------------------------------------------------------
 # Sidebar — system diagnostics
